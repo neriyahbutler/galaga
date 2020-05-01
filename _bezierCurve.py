@@ -16,6 +16,7 @@ class bezierCurve(object):
         self.end_pnt = e_pnt
         self.end_ctrl = e_ctrl
 
+
     def calculatePoint(self):
         if self.t < 1:
             curr_pointX = math.pow((1-self.t), 3)*self.start_pnt[0] + 3*math.pow((1-self.t),2)*self.t*self.start_ctrl[0] + 3*(1-self.t)*math.pow(self.t,2)*self.end_pnt[0] + math.pow(self.t,3)*self.end_ctrl[0]

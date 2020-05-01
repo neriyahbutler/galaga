@@ -19,12 +19,16 @@ butterfly[0] = pygame.transform.scale(butterfly[0], (30, 30))
 butterfly[1] = pygame.transform.scale(butterfly[1], (30, 30))
 
 class enemy(object):
+    initial_position = []
+
     prev_draw_time = 0
     iter = 0
+
     drift_count = 0
     drift_end = False
+
     isDead = False
-    status = 0
+    status = None
 
     curve_queue = 0
     initial_dive = False
@@ -80,19 +84,31 @@ class enemy(object):
         else:
             win.blit(bee[self.iter], (self.x, self.y))
 
-    def dive(self, type, gunship):
-        self.status = "Dive"
+
+    def dive(self, type, gunship, b_fly_cond):
         random_int = random.randint(1, 11)
         choice = random_int % 2
 
         if type == "butterfly":
             if self.initial_dive is False:
-                if choice == 0:
-                    self.curve_queue = [bezierCurve([self.x - 1, self.y + 253], [self.x - 29, self.y + 283], [self.x - 15, self.y + 259], [(gunship.x - random.randint(20,100)), self.y + 500]),\
-                         bezierCurve([self.x, self.y], [self.x - 75, self.y + 138], [self.x + 194, self.y + 93], [self.x - 1, self.y + 253])]
+                if choice == 0: # bezierCurve([self.x - 1, self.y + 253], [self.x - 29, self.y + 283], [self.x - 15, self.y + 259], [(gunship.x - random.randint(20, 80)), self.y + 500])
+                    self.curve_queue = [bezierCurve([self.x - 1, self.y + 253],
+                                                    [self.x - 50, self.y + 330],
+                                                    [self.x - 15, self.y + 259],
+                                                    [(gunship.x - random.randint(20, 50)), self.y + 480]),
+                                        bezierCurve([self.x, self.y],
+                                                    [self.x - 75, self.y + 138],
+                                                    [self.x + 194, self.y + 93],
+                                                    [self.x - 1, self.y + 253])]
                 else:
-                    self.curve_queue = [bezierCurve([self.x + 1, self.y + 253], [self.x + 29, self.y + 283], [self.x + 15, self.y + 259], [(gunship.x + random.randint(20,100)), self.y + 500]),\
-                         bezierCurve([self.x, self.y], [self.x + 75, self.y + 138], [self.x - 194, self.y + 93], [self.x + 1, self.y + 253])]
+                    self.curve_queue = [bezierCurve([self.x + 1, self.y + 253],
+                                                    [self.x + 50, self.y + 330],
+                                                    [self.x + 15, self.y + 259],
+                                                    [(gunship.x + random.randint(20, 50)), self.y + 480]),
+                                        bezierCurve([self.x, self.y],
+                                                    [self.x + 75, self.y + 138],
+                                                    [self.x - 194, self.y + 93],
+                                                    [self.x + 1, self.y + 253])]
                 self.initial_dive = True
 
             if len(self.curve_queue) != 0:
@@ -102,3 +118,84 @@ class enemy(object):
                 self.y = self.curve_queue[len(self.curve_queue) - 1].calculatePoint()[1]
                 if self.curve_queue[len(self.curve_queue) - 1].t >= 1:
                     self.curve_queue.pop()
+                    if len(self.curve_queue) is 0 and self.y > self.initial_position[1]:
+                        self.x = self.initial_position[0]
+                        self.y = -1
+                        self.curve_queue = [bezierCurve([self.x, self.y], [self.x, self.y], [self.x, self.initial_position[1]], [self.x, self.initial_position[1]])]
+
+        if type == "bee":
+            if self.initial_dive is False:
+                if choice == 0:
+                    self.curve_queue = [bezierCurve([self.x - 1, self.y + 253],
+                                                    [self.x - 50, self.y + 330], [self.x - 15, self.y + 259],
+                                                    [(gunship.x - random.randint(20,50)), self.y + 480]),
+                                        bezierCurve([self.x, self.y],
+                                                    [self.x - 75, self.y + 138],
+                                                    [self.x + 194, self.y + 93],
+                                                    [self.x - 1, self.y + 253])]
+                else:
+                    self.curve_queue = [bezierCurve([self.x + 1, self.y + 253],
+                                                    [self.x + 50, self.y + 330],
+                                                    [self.x + 15, self.y + 259],
+                                                    [(gunship.x + random.randint(20,50)), self.y + 480]),
+                                        bezierCurve([self.x, self.y],
+                                                    [self.x + 75, self.y + 138],
+                                                    [self.x - 194, self.y + 93],
+                                                    [self.x + 1, self.y + 253])]
+                self.initial_dive = True
+
+            if len(self.curve_queue) != 0:
+                if len(self.curve_queue) == 1:
+                    self.curve_queue[len(self.curve_queue) - 1].increaseVelocity()
+                self.x = self.curve_queue[len(self.curve_queue) - 1].calculatePoint()[0]
+                self.y = self.curve_queue[len(self.curve_queue) - 1].calculatePoint()[1]
+                if self.curve_queue[len(self.curve_queue) - 1].t >= 1:
+                    self.curve_queue.pop()
+                    if len(self.curve_queue) is 0 and self.y > self.initial_position[1]:
+                        self.x = self.initial_position[0]
+                        self.y = -1
+                        self.curve_queue = [
+                            bezierCurve([self.x, self.y], [self.x, self.y], [self.x, self.initial_position[1]],
+                                        [self.x, self.initial_position[1]])]
+
+        if type == "boss":
+            if self.initial_dive is False:
+                if choice == 0:
+                    self.curve_queue = [bezierCurve([self.x + 150.7, self.y + 264], [self.x + 134.2, self.y + 321.6],
+                                                    [self.x + 0.2, self.y + 433],
+                                                    [(gunship.x - random.randint(20, 60)), self.y + 464]),
+                                        bezierCurve([self.x + 0.5, self.y + 95], [self.x + 17, self.y + 152.6],
+                                                    [self.x + 155, self.y + 182], [self.x + 150.7, self.y + 264]),
+                                        bezierCurve([self.x + 98, self.y + 96], [self.x + 106, self.y + 25],
+                                                    [self.x + -1, self.y + 10.5], [self.x + 0.5, self.y + 95]),
+                                        bezierCurve([self.x, self.y], [self.x - 48, self.y + 177],
+                                                    [self.x + 102, self.y + 172], [self.x + 98, self.y + 96])]
+                else:
+                    self.curve_queue = [bezierCurve([self.x - 150.7, self.y + 264], [self.x - 134.2, self.y + 321.6],
+                                                    [self.x - 0.2, self.y + 433],
+                                                    [(gunship.x + random.randint(20, 60)), self.y + 464]),
+                                        bezierCurve([self.x - 0.5, self.y + 95], [self.x - 17, self.y + 152.6],
+                                                    [self.x - 155, self.y + 182], [self.x - 150.7, self.y + 264]),
+                                        bezierCurve([self.x - 98, self.y + 96], [self.x - 106, self.y + 25],
+                                                    [self.x - -1, self.y + 10.5], [self.x - 0.5, self.y + 95]),
+                                        bezierCurve([self.x, self.y], [self.x + 48, self.y + 177],
+                                                    [self.x - 102, self.y + 172], [self.x - 98, self.y + 96])]
+
+            self.initial_dive = True
+
+            if len(self.curve_queue) != 0:
+                if len(self.curve_queue) == 1:
+                    self.curve_queue[len(self.curve_queue) - 1].increaseVelocity()
+                self.x = self.curve_queue[len(self.curve_queue) - 1].calculatePoint()[0]
+                self.y = self.curve_queue[len(self.curve_queue) - 1].calculatePoint()[1]
+                if self.curve_queue[len(self.curve_queue) - 1].t >= 1:
+                    self.curve_queue.pop()
+                    if len(self.curve_queue) is 0 and self.y > self.initial_position[1]:
+                        self.x = self.initial_position[0]
+                        self.y = -1
+                        self.curve_queue = [bezierCurve([self.x, self.y], [self.x, self.y], [self.x, self.initial_position[1]], [self.x, self.initial_position[1]])]
+
+
+
+    def setStatus(self, state):
+        self.status = state

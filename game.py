@@ -33,6 +33,7 @@ explosions[3] = pygame.transform.scale(explosions[3], (30, 30))
 explosions[4] = pygame.transform.scale(explosions[4], (30, 30))
 
 enemy_storage = {"boss": [], "butterfly": [], "bee": [], "explosion": []}
+enemy_names = ["boss", "butterfly", "bee"]
 
 stars = []
 
@@ -43,6 +44,9 @@ x = 250
 y = 400
 vel = 4.5
 
+boss_cnt = -1
+butterfly_cnt = -1
+bee_cnt = -1
 
 class Star(object):
     colors = ["red", "green", "blue", "white"]
@@ -154,11 +158,21 @@ def redrawGameWindow():
     player.draw(win)
 
     for enemy1 in enemy_storage["boss"]:
+        if enemy1.status is "Dive":
+            if len(butterfly) >= 2:
+                enemy1.dive("boss", player, True)
+            else:
+                enemy1.dive("boss", player, False)
         enemy1.draw(win)
+
     for enemy1 in enemy_storage["butterfly"]:
-        enemy1.dive("butterfly", player)
+        if enemy1.status is "Dive":
+            enemy1.dive("butterfly", player, False)
         enemy1.draw(win)
+
     for enemy1 in enemy_storage["bee"]:
+        if enemy1.status is "Dive":
+            enemy1.dive("bee", player, False)
         enemy1.draw(win)
 
     for missile_it in player.missiles:
@@ -167,28 +181,32 @@ def redrawGameWindow():
     for explosion_it in enemy_storage["explosion"]:
         explosion_it.draw(win)
 
-    enemy_test.dive("butterfly", player)
-    enemy_test.draw(win)
-
     pygame.display.update()
 
 def create_fleet(fleet, fleet_type):
+    global boss_cnt
+    global butterfly_cnt
+    global bee_cnt
+
     index = 0
     if fleet_type == "boss":
         while index < 4:
             index += 1
             new_enemy = enemy("boss")
             fleet["boss"].append(new_enemy)
+            boss_cnt = boss_cnt + 1
     elif fleet_type == "bee":
         while index < 20:
             index += 1
             new_enemy = enemy("bee")
             fleet["bee"].append(new_enemy)
+            bee_cnt = bee_cnt + 1
     else:
         while index < 16:
             index += 1
             new_enemy = enemy("butterfly")
             fleet["butterfly"].append(new_enemy)
+            butterfly_cnt = butterfly_cnt + 1
 
 def create_stars(stars_buffer, stars_count):
     for i in range(stars_count):
@@ -203,6 +221,7 @@ def set_initial_pos(fleet, fleet_type):
         for enemy_1 in fleet[fleet_type]:
             enemy_1.x = x_cor
             enemy_1.y = y_cor
+            enemy_1.initial_position = [x_cor, y_cor]
             x_cor += x_increment
             print("location set to", enemy_1.x, enemy_1.y)
 
@@ -222,8 +241,10 @@ def set_initial_pos(fleet, fleet_type):
                 new_row = True
             enemy_1.x = x_cor
             enemy_1.y = y_cor
+            enemy_1.initial_position = [x_cor, y_cor]
             x_cor += x_increment
             counter += 1
+
     if fleet_type == "bee":
         y_cor = 130
         x_cor = 85
@@ -240,6 +261,7 @@ def set_initial_pos(fleet, fleet_type):
                 new_row = True
             enemy_1.x = x_cor
             enemy_1.y = y_cor
+            enemy_1.initial_position = [x_cor, y_cor]
             x_cor += x_increment
             counter += 1
 
@@ -265,6 +287,17 @@ create_fleet(enemy_storage, "bee")
 set_initial_pos(enemy_storage, "bee")
 
 run = True
+
+firstDive_1 = True
+firstDive_2 = True
+
+firstD2_ready = False
+
+prevTime = 0
+diveTime = 0
+
+# Something is fucked up about the pygame.time.get_ticks() shit...
+# when I click the window and drag it, that's when the flying shit starts to happen.. idk why....
 while run:
     font = pygame.font.Font("font/Joystix.ttf", 15)
     clock.tick(60)
@@ -275,6 +308,45 @@ while run:
 
     keys = pygame.key.get_pressed()
 
+    if firstDive_1 or firstDive_2:
+        if prevTime is 0:
+            prevTime = pygame.time.get_ticks()
+        else:
+            if firstDive_1 is False:
+                if (pygame.time.get_ticks() - prevTime) > 500:
+                    firstD2_ready = True
+            if (pygame.time.get_ticks() - prevTime) > 2000 or (not firstDive_1 and firstD2_ready):
+                print("\nstarting initial dive\n")
+                if firstDive_1 is True:
+                    enemy_storage["boss"][random.randint(0, boss_cnt)].setStatus("Dive")
+                    firstDive_1 = False
+                    prevTime = pygame.time.get_ticks()
+                    print("prevTime updated to", prevTime)
+                else:
+                    try:
+                        print("2nd enemy starts flying\n")
+                        enemy_storage["bee"][random.randint(0, bee_cnt)].setStatus("Dive")
+                        firstDive_2 = False
+                        diveTime = pygame.time.get_ticks()
+                    except:
+                        print("Error with bee diving\n")
+    else:
+        if (pygame.time.get_ticks() - diveTime) > 3000:
+            if (random.randint(0, 3)) > 0:
+                try:
+                    enemy_storage["bee"][random.randint(0, bee_cnt)].setStatus("Dive")
+                    diveTime = pygame.time.get_ticks()
+                except:
+                    print("Error with bee diving\n")
+            else: # Seems like if you kill the enemy at a certain time mid-flight, the game crashes...
+                try:
+                    bee_iter = random.randint(0, boss_cnt)
+                    enemy_storage["boss"][bee_iter].setStatus("Dive")
+                    diveTime = pygame.time.get_ticks()
+                except:
+                    print("Error with boss diving", bee_iter, "\n")
+
+
     for missile_it in player.missiles:
         if missile_it.y > 0:
             missile_it.y -= missile_it.speed
@@ -283,6 +355,7 @@ while run:
                 if isCollision(enemy_1, missile_it) and not enemy_1.isDead:
                     if enemy_1.health == 1:
                         score += 150 # Later on, check to see the position/action of the enemy
+                        boss_cnt -= 1
                         enemy_1.isDead = True
                         player.missiles.pop(player.missiles.index(missile_it))
 
@@ -306,6 +379,8 @@ while run:
             for enemy_1 in enemy_storage["butterfly"]:
                 if isCollision(enemy_1, missile_it) and not enemy_1.isDead:
                     score += 80 # Later on, check to see the position/action of the enemy
+                    butterfly_cnt -= 1
+                    print("Current butterfly count:", butterfly_cnt)
                     enemy_1.isDead = True
                     player.missiles.pop(player.missiles.index(missile_it))
 
@@ -321,6 +396,8 @@ while run:
             for enemy_1 in enemy_storage["bee"]:
                 if isCollision(enemy_1, missile_it) and not enemy_1.isDead:
                     score += 50 # Later on, check to see the position/action of the enemy
+                    bee_cnt -= 1
+                    print("Current bee count:", bee_cnt)
                     enemy_1.isDead = True
                     player.missiles.pop(player.missiles.index(missile_it))
 
@@ -334,8 +411,6 @@ while run:
                     break
         else:
             player.missiles.pop(player.missiles.index(missile_it))
-
-
 
     if keys[pygame.K_LEFT] and player.x - player.speed > 0:
         player.x -= player.speed
