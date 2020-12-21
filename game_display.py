@@ -13,22 +13,22 @@ def display_lives():
 
 def display_enemies():
     for enemy1 in enemy_storage["boss"]:
-        if enemy1.status is "Dive":
+        if enemy1[0].status == "Dive":
             if len(butterfly) >= 2:
-                enemy1.dive("boss", player)
+                enemy1[0].dive("boss", player)
             else:
-                enemy1.dive("boss", player)
-        enemy1.draw(win)
+                enemy1[0].dive("boss", player)
+        enemy1[0].draw(win)
 
     for enemy1 in enemy_storage["butterfly"]:
-        if enemy1.status is "Dive":
-            enemy1.dive("butterfly", player)
-        enemy1.draw(win)
+        if enemy1[0].status == "Dive":
+            enemy1[0].dive("butterfly", player)
+        enemy1[0].draw(win)
 
     for enemy1 in enemy_storage["bee"]:
-        if enemy1.status is "Dive":
-            enemy1.dive("bee", player)
-        enemy1.draw(win)
+        if enemy1[0].status == "Dive":
+            enemy1[0].dive("bee", player)
+        enemy1[0].draw(win)
 
 
 def display_missiles():

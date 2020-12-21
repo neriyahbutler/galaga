@@ -234,7 +234,7 @@ class Enemy(object):
 
             if self.curve_queue[len(self.curve_queue) - 1].t >= 1:
                 self.curve_queue.pop()
-                if len(self.curve_queue) is 0 and self.y > self.initial_position[1]:
+                if len(self.curve_queue) == 0 and self.y > self.initial_position[1]:
                     self.x = self.initial_position[0]
                     self.y = -1
                     self.curve_queue = [
@@ -365,6 +365,20 @@ class PlayerExplosion(object):
             enemy_storage["player_explosion"].pop(enemy_storage["player_explosion"].index(self))
 
 
+class Object_SFX(object):
+    type = ''
+
+    def __init__(self, type):
+        self.type = type
+        self.sfx1 = pygame.mixer.Sound("galaga_sfx/wav/04 Alien Flying.wav")
+        if type == 'boss':
+            self.sfx2 = pygame.mixer.Sound("galaga_sfx/wav/08 Boss Stricken#2.wav")
+            self.sfx3 = pygame.mixer.Sound("galaga_sfx/wav/07 Boss Stricken#1.wav")
+        elif type == 'bee':
+            self.sfx2 = pygame.mixer.Sound("galaga_sfx/wav/05 Zako Stricken.wav")
+        else:
+            self.sfx2 = pygame.mixer.Sound("galaga_sfx/wav/06 Goei Stricken.wav")
+
 
 class PlayerClass(object):
     lives = 0
@@ -411,6 +425,7 @@ class PlayerClass(object):
     def get_death_timer(self):
         return self.death_timer
 
+
 def create_fleet(fleet, fleet_type):
     global boss_cnt
     global butterfly_cnt
@@ -421,19 +436,19 @@ def create_fleet(fleet, fleet_type):
         while index < 4:
             index += 1
             new_enemy = Enemy("boss")
-            fleet["boss"].append(new_enemy)
+            fleet["boss"].append([new_enemy, Object_SFX("boss")])
             boss_cnt = boss_cnt + 1
     elif fleet_type == "bee":
         while index < 20:
             index += 1
             new_enemy = Enemy("bee")
-            fleet["bee"].append(new_enemy)
+            fleet["bee"].append([new_enemy, Object_SFX("bee")])
             bee_cnt = bee_cnt + 1
     else:
         while index < 16:
             index += 1
             new_enemy = Enemy("butterfly")
-            fleet["butterfly"].append(new_enemy)
+            fleet["butterfly"].append([new_enemy, Object_SFX("butterfly")])
             butterfly_cnt = butterfly_cnt + 1
 
 
@@ -443,11 +458,11 @@ def create_stars(stars_buffer, stars_count):
 
 
 def set_init_pos(fleet, fleet_type):
-    if fleet_type is "boss":
+    if fleet_type == "boss":
         set_init_pos_boss(fleet)
-    if fleet_type is "butterfly":
+    if fleet_type == "butterfly":
         set_init_pos_butterfly(fleet)
-    if fleet_type is "bee":
+    if fleet_type == "bee":
         set_init_pos_bee(fleet)
 
 
@@ -457,10 +472,10 @@ def set_init_pos_boss(fleet):
     x_increment = 30
 
     for enemy_1 in fleet["boss"]:
-        enemy_1.x = x_cor
-        enemy_1.y = y_cor
-        enemy_1.initial_position = [x_cor, y_cor]
-        enemy_1.set_prev_pos(x_cor, y_cor)
+        enemy_1[0].x = x_cor
+        enemy_1[0].y = y_cor
+        enemy_1[0].initial_position = [x_cor, y_cor]
+        enemy_1[0].set_prev_pos(x_cor, y_cor)
         x_cor += x_increment
 
 
@@ -477,10 +492,10 @@ def set_init_pos_butterfly(fleet):
             y_cor = 100
             x_cor = 140
             new_row = True
-        enemy_1.x = x_cor
-        enemy_1.y = y_cor
-        enemy_1.initial_position = [x_cor, y_cor]
-        enemy_1.set_prev_pos(x_cor, y_cor)
+        enemy_1[0].x = x_cor
+        enemy_1[0].y = y_cor
+        enemy_1[0].initial_position = [x_cor, y_cor]
+        enemy_1[0].set_prev_pos(x_cor, y_cor)
         x_cor += x_increment
         counter += 1
 
@@ -498,10 +513,10 @@ def set_init_pos_bee(fleet):
             y_cor = 160
             x_cor = 85
             new_row = True
-        enemy_1.x = x_cor
-        enemy_1.y = y_cor
-        enemy_1.initial_position = [x_cor, y_cor]
-        enemy_1.set_prev_pos(x_cor, y_cor)
+        enemy_1[0].x = x_cor
+        enemy_1[0].y = y_cor
+        enemy_1[0].initial_position = [x_cor, y_cor]
+        enemy_1[0].set_prev_pos(x_cor, y_cor)
         x_cor += x_increment
         counter += 1
 
