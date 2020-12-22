@@ -12,7 +12,8 @@ def redrawGameWindow():
 
     display_stars()
 
-    player.draw(win)
+    if not deathBoolean:
+        player.draw(win)
 
     display_enemies()
 
@@ -35,65 +36,71 @@ while run:
 
     keys = pygame.key.get_pressed()
 
+    if pygame.time.get_ticks() - deathTime > 3000 and deathBoolean is True and len(PlayerClass.lives_queue) > 0:
+        deathBoolean = False
+        PlayerClass.lives_queue.pop()
+        player.set_position(250, 450)
+
     # The algorithm for making the enemies fly
-    if firstDive_1 or firstDive_2:
-        if prevTime == 0:
-            prevTime = pygame.time.get_ticks()
+    if not deathBoolean:
+        if firstDive_1 or firstDive_2:
+            if prevTime == 0:
+                prevTime = pygame.time.get_ticks()
+            else:
+                if firstDive_1 is False:
+                    if (pygame.time.get_ticks() - prevTime) > 500:
+                        firstD2_ready = True
+                if (pygame.time.get_ticks() - prevTime) > 2000 or (not firstDive_1 and firstD2_ready):
+                    if firstDive_1 is True:
+                        boss_it = random.randint(0, boss_cnt)
+                        enemy_storage["boss"][boss_it][0].set_status("Dive")
+                        enemy_storage["boss"][boss_it][1].sfx1.play()
+
+                        firstDive_1 = False
+                        prevTime = pygame.time.get_ticks()
+                    else:
+                        try:
+                            boss_it = random.randint(0, bee_cnt)
+                            enemy_storage["bee"][boss_it][0].set_status("Dive")
+                            enemy_storage["bee"][boss_it][1].sfx1.play()
+
+                            firstDive_2 = False
+                            diveTime = pygame.time.get_ticks()
+                        except IndexError:
+                            print("Error with bee diving\n")
         else:
-            if firstDive_1 is False:
-                if (pygame.time.get_ticks() - prevTime) > 500:
-                    firstD2_ready = True
-            if (pygame.time.get_ticks() - prevTime) > 2000 or (not firstDive_1 and firstD2_ready):
-                if firstDive_1 is True:
-                    boss_it = random.randint(0, boss_cnt)
-                    enemy_storage["boss"][boss_it][0].set_status("Dive")
-                    enemy_storage["boss"][boss_it][1].sfx1.play()
+            if (pygame.time.get_ticks() - diveTime) > 3000:
+                x = random.randint(0, 4)
 
-                    firstDive_1 = False
-                    prevTime = pygame.time.get_ticks()
-                else:
+                if (x == 0 or x == 3) and bee_cnt > 0:
                     try:
-                        boss_it = random.randint(0, bee_cnt)
-                        enemy_storage["bee"][boss_it][0].set_status("Dive")
-                        enemy_storage["bee"][boss_it][1].sfx1.play()
+                        bee_it = random.randint(0, bee_cnt)
+                        enemy_storage["bee"][bee_it][0].set_status("Dive")
+                        enemy_storage["bee"][bee_it][1].sfx1.play()
 
-                        firstDive_2 = False
                         diveTime = pygame.time.get_ticks()
                     except IndexError:
                         print("Error with bee diving\n")
-    else:
-        if (pygame.time.get_ticks() - diveTime) > 3000:
-            x = random.randint(0, 4)
 
-            if (x == 0 or x == 3) and bee_cnt > 0:
-                try:
-                    bee_it = random.randint(0, bee_cnt)
-                    enemy_storage["bee"][bee_it][0].set_status("Dive")
-                    enemy_storage["bee"][bee_it][1].sfx1.play()
+                elif (x == 1 or x == 4) and butterfly_cnt > 0:
+                    try:
+                        butterfly_it = random.randint(0, butterfly_cnt)
+                        enemy_storage["butterfly"][butterfly_it][0].set_status("Dive")
+                        enemy_storage["butterfly"][butterfly_it][1].sfx1.play()
 
-                    diveTime = pygame.time.get_ticks()
-                except IndexError:
-                    print("Error with bee diving\n")
+                        diveTime = pygame.time.get_ticks()
+                    except IndexError:
+                        print("Error with butterfly diving\n")
 
-            elif (x == 1 or x == 4) and butterfly_cnt > 0:
-                try:
-                    butterfly_it = random.randint(0, butterfly_cnt)
-                    enemy_storage["butterfly"][butterfly_it][0].set_status("Dive")
-                    enemy_storage["butterfly"][butterfly_it][1].sfx1.play()
+                if x == 2 and boss_cnt > 0:
+                    try:
+                        boss_it = random.randint(0, boss_cnt)
+                        enemy_storage["boss"][boss_it][0].set_status("Dive")
+                        enemy_storage["boss"][boss_it][1].sfx1.play()
 
-                    diveTime = pygame.time.get_ticks()
-                except IndexError:
-                    print("Error with butterfly diving\n")
-
-            if x == 2 and boss_cnt > 0:
-                try:
-                    boss_it = random.randint(0, boss_cnt)
-                    enemy_storage["boss"][boss_it][0].set_status("Dive")
-                    enemy_storage["boss"][boss_it][1].sfx1.play()
-
-                    diveTime = pygame.time.get_ticks()
-                except IndexError:
-                    print("Error with boss diving", boss_it, "\n")
+                        diveTime = pygame.time.get_ticks()
+                    except IndexError:
+                        print("Error with boss diving", boss_it, "\n")
 
     # The code below checks for collisions between enemies and the player's missile
     for missile_it in player.missiles:
@@ -158,14 +165,36 @@ while run:
         else:
             player.missiles.pop(player.missiles.index(missile_it))
 
+    if deathBoolean is False:
+        for enemy in enemy_storage["boss"]:
+            if is_collision(enemy[0], player):
+                deathBoolean = True
+                enemy_storage["player_explosion"].append(PlayerExplosion(player))
+                deathTime = pygame.time.get_ticks()
+                sfx_22.play()
+
+        for enemy in enemy_storage["bee"]:
+            if is_collision(enemy[0], player):
+                deathBoolean = True
+                enemy_storage["player_explosion"].append(PlayerExplosion(player))
+                deathTime = pygame.time.get_ticks()
+                sfx_22.play()
+
+        for enemy in enemy_storage["butterfly"]:
+            if is_collision(enemy[0], player):
+                deathBoolean = True
+                enemy_storage["player_explosion"].append(PlayerExplosion(player))
+                deathTime = pygame.time.get_ticks()
+                sfx_22.play()
+
     # Allows the player to control the gunship and fire missiles
-    if keys[pygame.K_LEFT] and player.x - player.speed > 0:
+    if keys[pygame.K_LEFT] and player.x - player.speed > 0 and deathBoolean is False:
         player.x -= player.speed
 
-    if keys[pygame.K_RIGHT] and player.x + player.speed < 470:
+    if keys[pygame.K_RIGHT] and player.x + player.speed < 470 and deathBoolean is False:
         player.x += player.speed
 
-    if keys[pygame.K_SPACE]:
+    if keys[pygame.K_SPACE] and deathBoolean is False:
         player.fire_missile()
 
     redrawGameWindow()
