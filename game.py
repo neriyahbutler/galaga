@@ -63,7 +63,9 @@ while run:
                         print("Error with bee diving\n")
     else:
         if (pygame.time.get_ticks() - diveTime) > 3000:
-            if (random.randint(0, 3)) > 0:
+            x = random.randint(0, 4)
+
+            if (x == 0 or x == 3) and bee_cnt > 0:
                 try:
                     bee_it = random.randint(0, bee_cnt)
                     enemy_storage["bee"][bee_it][0].set_status("Dive")
@@ -72,15 +74,26 @@ while run:
                     diveTime = pygame.time.get_ticks()
                 except IndexError:
                     print("Error with bee diving\n")
-            else:
+
+            elif (x == 1 or x == 4) and butterfly_cnt > 0:
                 try:
-                    bee_iter = random.randint(0, boss_cnt)
-                    enemy_storage["bee"][bee_iter][0].set_status("Dive")
-                    enemy_storage["bee"][bee_it][1].sfx1.play()
+                    butterfly_it = random.randint(0, butterfly_cnt)
+                    enemy_storage["butterfly"][butterfly_it][0].set_status("Dive")
+                    enemy_storage["butterfly"][butterfly_it][1].sfx1.play()
 
                     diveTime = pygame.time.get_ticks()
                 except IndexError:
-                    print("Error with boss diving", bee_iter, "\n")
+                    print("Error with butterfly diving\n")
+
+            if x == 2 and boss_cnt > 0:
+                try:
+                    boss_it = random.randint(0, boss_cnt)
+                    enemy_storage["boss"][boss_it][0].set_status("Dive")
+                    enemy_storage["boss"][boss_it][1].sfx1.play()
+
+                    diveTime = pygame.time.get_ticks()
+                except IndexError:
+                    print("Error with boss diving", boss_it, "\n")
 
     # The code below checks for collisions between enemies and the player's missile
     for missile_it in player.missiles:
@@ -92,6 +105,7 @@ while run:
                         score += 150
                         boss_cnt -= 1
                         enemy_1[1].sfx2.play()
+                        enemy_1[1].sfx1.stop()
                         enemy_1[0].isDead = True
                         player.missiles.pop(player.missiles.index(missile_it))
 
@@ -107,7 +121,7 @@ while run:
                         player.missiles.pop(player.missiles.index(missile_it))
 
                         enemy_1[0].iter += 2
-                        win.blit(boss_galaga[enemy_1[0].iter], (enemy_1[0].x, enemy_1[0].y))
+                        win.blit(boss_galaga[enemy_1[0].iter], (int(enemy_1[0].x), int(enemy_1[0].y)))
                         break
 
             for enemy_1 in enemy_storage["butterfly"]:
@@ -115,6 +129,7 @@ while run:
                     score += 80
                     butterfly_cnt -= 1
                     enemy_1[1].sfx2.play()
+                    enemy_1[1].sfx1.stop()
                     enemy_1[0].isDead = True
                     player.missiles.pop(player.missiles.index(missile_it))
 
@@ -130,6 +145,7 @@ while run:
                     score += 50
                     bee_cnt -= 1
                     enemy_1[1].sfx2.play()
+                    enemy_1[1].sfx2.stop()
                     enemy_1[0].isDead = True
                     player.missiles.pop(player.missiles.index(missile_it))
 
