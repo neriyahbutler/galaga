@@ -37,7 +37,10 @@ def display_missiles():
 
     # Draws the missiles the enemies have fired
     for enemy_missile_it in enemy_missile_buffer:
-        enemy_missile_it.draw(win)
+        if enemy_missile_it.x < 5000:
+            enemy_missile_it.draw(win)
+        else:
+            enemy_missile_buffer.pop(enemy_missile_buffer.index(enemy_missile_it))
 
 
 def display_explosion_fx():

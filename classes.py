@@ -32,17 +32,21 @@ enemy_missile_buffer = []
 
 
 class EnemyMissile(object):
-    def __init__(self, enemy, player_gunship):
+    def __init__(self, enemy, slope):
         self.x = enemy[0]
         self.y = enemy[1]
 
         self.speed = 1
-        self.target = [player_gunship.x, player_gunship.y]
-        self.slope = (self.target[1] - self.y)/(self.target[0] - self.x)
+        self.slope = slope
+        self.b = enemy[1] * 1/slope * (1/enemy[0])
+        print("Missile slope:", self.slope)
+        print("Missile x and y:", self.x, self.y)
 
     def draw(self, win):
-        win.blit(enemy_missile, (self.x + self.speed, self.x * self.slope))
-
+        win.blit(enemy_missile, (self.x, self.y))
+        pygame.draw.line(win, (255,0,255), (self.x, self.y), (self.x + 2, self.x * self.slope + self.b), 2)
+        self.x += 2
+        self.y = self.x * self.slope + self.b
 
 class Enemy(object):
     global player
@@ -62,6 +66,8 @@ class Enemy(object):
     curve_queue = 0
     initial_dive = False
     enemyMissileFired = False
+
+    missile_fired = False
 
     angle = 0.0
 
@@ -104,23 +110,6 @@ class Enemy(object):
                 else:
                     self.iter = 2
             self.prev_draw_time = pygame.time.get_ticks()
-
-        # if len(self.waypoint) > 0:
-        #     self.dist = self.curve_queue[0].peek_calculated_point()
-        #     temp_xy_diff = [self.dist[0] - self.x, self.dist[1] - self.y]
-        #
-        #     self.angle = math.degrees(math.atan2(temp_xy_diff[1], temp_xy_diff[0]))
-        #
-        #     if self.angle > 360.0:
-        #         mul = self.angle / 360
-        #         self.angle -= 360.0*mul
-        #
-        #     elif self.angle < 0.0:
-        #         mul = (self.angle/360) - 1
-        #         self.angle += 360.0*mul
-        #
-        #     if self.enemy_type == 'boss':
-        #         print('Current enemy has angle of ' + str(self.angle))
 
         if self.enemy_type == "boss":
             self.image = pygame.transform.rotate(boss_galaga[self.iter], self.angle)
@@ -224,6 +213,13 @@ class Enemy(object):
     # Adjusts the position of the enemy based on the next position in the "curve queue"
     def adjust_position(self):
         self.prev_x = self.x
+        if len(self.curve_queue) > 1 and self.missile_fired is False:
+            slope = (player.y - self.y)/(player.x - self.x)
+            print("Enemy location:", self.x, self.y)
+            print("PLayer location:", player.x, player.y)
+            self.fire_enemy_missile(slope)
+            self.missile_fired = True
+
         if len(self.curve_queue) != 0:
             self.waypoint = self.curve_queue[len(self.curve_queue) - 1].end_pnt
             if len(self.curve_queue) == 1:
@@ -241,8 +237,8 @@ class Enemy(object):
                         BezierCurve([self.x, self.y], [self.x, self.y], [self.x, self.initial_position[1]],
                                     [self.x, self.initial_position[1]])]
 
-    def fire_enemy_missile(self):
-        enemy_missile_buffer.append(EnemyMissile([self.x, self.y], player))
+    def fire_enemy_missile(self, slope):
+        enemy_missile_buffer.append(EnemyMissile([self.x, self.y], slope))
 
     def set_status(self, state):
         self.status = state
@@ -324,6 +320,7 @@ class Gunship(object):
     def set_position(self, x, y):
         self.x = x
         self.y = y
+
 
 class Missile(object):
     def __init__(self, gunship_):

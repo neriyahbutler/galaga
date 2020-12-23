@@ -152,7 +152,7 @@ while run:
                     score += 50
                     bee_cnt -= 1
                     enemy_1[1].sfx2.play()
-                    enemy_1[1].sfx2.stop()
+                    enemy_1[1].sfx1.stop()
                     enemy_1[0].isDead = True
                     player.missiles.pop(player.missiles.index(missile_it))
 
@@ -166,6 +166,13 @@ while run:
             player.missiles.pop(player.missiles.index(missile_it))
 
     if deathBoolean is False:
+        for enemy_missile in enemy_missile_buffer:
+            if is_collision(enemy_missile, player):
+                deathBoolean = True
+                enemy_storage["player_explosion"].append(PlayerExplosion(player))
+                deathTime = pygame.time.get_ticks()
+                sfx_22.play()
+
         for enemy in enemy_storage["boss"]:
             if is_collision(enemy[0], player):
                 deathBoolean = True
