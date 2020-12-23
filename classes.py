@@ -36,16 +36,22 @@ class EnemyMissile(object):
         self.x = enemy[0]
         self.y = enemy[1]
 
-        self.speed = 1
-        self.slope = slope
-        self.b = enemy[1] * 1/slope * (1/enemy[0])
+        self.slope = abs(slope)
+        self.b = self.y - slope * self.x
         print("Missile slope:", self.slope)
         print("Missile x and y:", self.x, self.y)
 
     def draw(self, win):
         win.blit(enemy_missile, (self.x, self.y))
-        pygame.draw.line(win, (255,0,255), (self.x, self.y), (self.x + 2, self.x * self.slope + self.b), 2)
-        self.x += 2
+        # pygame.draw.line(win, (255, 0, 255), (self.x, self.y), (player.x, player.y), 2)
+        if self.slope > 20:
+            self.x += 0.2
+        elif 10 < self.slope < 20:
+            self.x += 1
+        elif 5 < self.slope < 10:
+            self.x += 1.5
+        else:
+            self.x += 2
         self.y = self.x * self.slope + self.b
 
 class Enemy(object):
@@ -215,9 +221,11 @@ class Enemy(object):
         self.prev_x = self.x
         if len(self.curve_queue) > 1 and self.missile_fired is False:
             slope = (player.y - self.y)/(player.x - self.x)
+            print("==============")
             print("Enemy location:", self.x, self.y)
             print("PLayer location:", player.x, player.y)
             self.fire_enemy_missile(slope)
+            print("============")
             self.missile_fired = True
 
         if len(self.curve_queue) != 0:
